@@ -100,6 +100,18 @@ class ofxHeadlessFbo {
     /// }
     /// ~~~~
     void drawRectangle(float x, float y, float w, float h);
+    /// \brief Draws a square from point x,y with a given dimension.
+    void drawSquare(float x, float y, float d);
+    /// \brief Draws a square centered at point x,y with a given dimension.
+    void drawSquareCentered(float x, float y, float d);
+
+    /// \brief Draws a triangle, with the three points: (x1,y1),(x2, y2),(x3, y3).
+    /// ~~~~{.cpp}
+    /// void ofApp::draw(){
+    ///     hfbo.drawTriangle(50,10,10,40,90,40);
+    /// }
+    /// ~~~~
+    void drawTriangle(float x1,float y1,float x2,float y2,float x3, float y3);
 
     void setFill();
     void setNoFill();

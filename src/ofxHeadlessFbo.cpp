@@ -150,3 +150,97 @@ void ofxHeadlessFbo::drawRectangle(float x, float y, float w, float h) {
         writeLineV(x+w-1, y, h);
     }
 }
+
+void ofxHeadlessFbo::drawSquare(float x, float y, float d) {
+    drawRectangle(x, y, d, d);
+}
+
+void ofxHeadlessFbo::drawSquareCentered(float x, float y, float d) {
+    drawRectangle(x-d/2, y-d/2, d, d);
+}
+
+
+void ofxHeadlessFbo::drawTriangle(float x1,float y1,float x2,float y2,float x3, float y3) {
+    if (fill) {
+        int a, b, y, last;
+
+        // Sort coordinates by Y order (y3 >= y2 >= y1)
+        if (y1 > y2) {
+            std::swap(y1, y2);
+            std::swap(x1, x2);
+        }
+        if (y2 > y3) {
+            std::swap(y3, y2);
+            std::swap(x3, x2);
+        }
+        if (y1 > y2) {
+            std::swap(y1, y2);
+            std::swap(x1, x2);
+        }
+
+        if (y1 == y3) { // Handle awkward all-on-same-line case as its own thing
+            a = b = x1;
+            if (x2 < a)
+                a = x2;
+            else if (x2 > b)
+                b = x2;
+            if (x3 < a)
+                a = x3;
+            else if (x3 > b)
+                b = x3;
+            writeLineH(a, y1, b - a + 1);
+            return;
+        }
+
+        int dx12 = x2 - x1, dy12 = y2 - y1, dx13 = x3 - x1, dy13 = y3 - y1,
+            dx23 = x3 - x2, dy23 = y3 - y2;
+        long sa = 0, sb = 0;
+
+        // For upper part of triangle, find scanline crossings for segments
+        // 0-1 and 0-2.  If y2=y3 (flat-bottomed triangle), the scanline y2
+        // is included here (and second loop will be skipped, avoiding a /0
+        // error there), otherwise scanline y2 is skipped here and handled
+        // in the second loop...which also avoids a /0 error here if y1=y2
+        // (flat-topped triangle).
+        if (y2 == y3)
+            last = y2; // Include y2 scanline
+        else
+            last = y2 - 1; // Skip it
+
+        for (y = y1; y <= last; y++) {
+            a = x1 + sa / dy12;
+            b = x1 + sb / dy13;
+            sa += dx12;
+            sb += dx13;
+            /* longhand:
+            a = x1 + (x2 - x1) * (y - y1) / (y2 - y1);
+            b = x1 + (x3 - x1) * (y - y1) / (y3 - y1);
+            */
+            if (a > b)
+                std::swap(a, b);
+            writeLineH(a, y, b - a + 1);
+        }
+
+        // For lower part of triangle, find scanline crossings for segments
+        // 1-3 and 2-3.  This loop is skipped if y2=y3.
+        sa = (long)dx23 * (y - y2);
+        sb = (long)dx13 * (y - y1);
+        for (; y <= y3; y++) {
+            a = x2 + sa / dy23;
+            b = x1 + sb / dy13;
+            sa += dx23;
+            sb += dx13;
+            /* longhand:
+            a = x2 + (x3 - x2) * (y - y2) / (y3 - y2);
+            b = x1 + (x3 - x1) * (y - y1) / (y3 - y1);
+            */
+            if (a > b)
+                std::swap(a, b);
+            writeLineH(a, y, b - a + 1);
+        }
+    } else {
+        drawLine(x1, y1, x2, y2);
+        drawLine(x2, y2, x3, y3);
+        drawLine(x3, y3, x1, y1);
+    }
+}

@@ -10,6 +10,8 @@ void ofApp::setup(){
 
     fbo.begin();
     ofClear(ofColor::green);
+    ofSetColor(ofColor::darkCyan);
+    ofDrawTriangle( 0, 100, 50, 0, 100, 100);
     ofSetColor(ofColor::blue);
     ofDrawRectangle(25,25,50,50);
     ofSetColor(ofColor::red);
@@ -20,6 +22,8 @@ void ofApp::setup(){
 
     hfbo.allocate(100, 100, OF_PIXELS_RGB);
     hfbo.clear(ofColor::red);
+    hfbo.setColor(ofColor::darkCyan);
+    hfbo.drawTriangle( 0, 100, 50, 0, 100, 100);
     hfbo.setColor(ofColor::blue);
     hfbo.drawRectangle(25,25,50,50);
     hfbo.setColor(ofColor::green);
