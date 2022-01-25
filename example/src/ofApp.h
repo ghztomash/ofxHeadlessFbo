@@ -22,9 +22,10 @@ class ofApp : public ofBaseApp{
 		void dragEvent(ofDragInfo dragInfo);
 		void gotMessage(ofMessage msg);
 
+        int size = 400;
+
         ofxHeadlessFbo hfbo;
 
         ofPixels pix;
-        ofTexture tex;
         ofFbo fbo;
 };

@@ -1,37 +1,41 @@
 #include "ofApp.h"
+#include "ofAppRunner.h"
 #include "ofGraphics.h"
 
 //--------------------------------------------------------------
 void ofApp::setup(){
+
+    size = (ofGetWidth() / 2.0) - 20;
     
-    fbo.allocate(100, 100, GL_RGB);
-    pix.allocate(100, 100, OF_PIXELS_RGB);
-    tex.allocate(100, 100, GL_RGB);
+    fbo.allocate(size, size, GL_RGB);
+    pix.allocate(size, size, OF_PIXELS_RGB);
 
     fbo.begin();
     ofClear(ofColor::green);
     ofSetColor(ofColor::darkCyan);
-    ofDrawTriangle( 0, 100, 50, 0, 100, 100);
-    ofSetColor(ofColor::blue);
-    ofDrawRectangle(25,25,50,50);
+    ofDrawTriangle( 0, size, size/2.0, 0, size, size);
+    ofSetColor(ofColor::blue); 
+    ofDrawRectangle(size/4.0,size/4.0,size/2.0,size/2.0);
+    ofSetColor(ofColor::white);
+    ofDrawCircle(size/2.0,size/2.0, size/4.0);
     ofSetColor(ofColor::red);
-    ofDrawLine(0, 0, 100, 100);
-    ofDrawLine(1, 1, 1, 100);
-    ofDrawLine(1, 1, 100, 1);
+    ofDrawLine(0, 0, size, size);
+    ofDrawLine(size, 0, 0, size);
     fbo.end();
 
-    hfbo.allocate(100, 100, OF_PIXELS_RGB);
+    hfbo.allocate(size, size, OF_PIXELS_RGB);
     hfbo.clear(ofColor::red);
     hfbo.setColor(ofColor::darkCyan);
-    hfbo.drawTriangle( 0, 100, 50, 0, 100, 100);
+    hfbo.drawTriangle( 0, size, size/2.0, 0, size, size);
     hfbo.setColor(ofColor::blue);
-    hfbo.drawRectangle(25,25,50,50);
+    hfbo.drawRectangle(size/4.0,size/4.0,size/2.0,size/2.0);
+    hfbo.setColor(ofColor::white);
+    hfbo.drawCircle(size/2.0,size/2.0, size/4.0);
     hfbo.setColor(ofColor::green);
-    hfbo.drawLine(0, 0, 100, 100);
-    hfbo.drawLine(1, 1, 1, 100);
-    hfbo.drawLine(1, 1, 100, 1);
+    hfbo.drawLine(0, 0, size, size);
+    hfbo.drawLine(size, 0, 0, size);
 
-    fbo.readToPixels(pix);
+    //fbo.readToPixels(pix);
     //hfbo.setFromPixels(pix, 100, 100, OF_PIXELS_RGB);
 }
 
@@ -44,7 +48,7 @@ void ofApp::draw(){
     // draw the virtual FBO
     hfbo.draw(10, 10);
     // draw the reference FBO
-    fbo.draw(120, 10);
+    fbo.draw(size + 20, 10);
 }
 
 //--------------------------------------------------------------

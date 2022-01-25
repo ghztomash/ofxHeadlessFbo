@@ -113,6 +113,15 @@ class ofxHeadlessFbo {
     /// ~~~~
     void drawTriangle(float x1,float y1,float x2,float y2,float x3, float y3);
 
+    /// \brief Draws a circle, centered at x,y, with a given radius.
+    ///
+    /// ~~~~{.cpp}
+    /// void ofApp::draw(){
+    ///      hfbo.drawCircle(150,150,100);
+    /// }
+    /// ~~~~
+    void drawCircle(float x, float y, float r);
+
     void setFill();
     void setNoFill();
 
@@ -124,6 +133,8 @@ class ofxHeadlessFbo {
     void writeLine(size_t x1, size_t y1, size_t x2, size_t y2);
     void writeLineH(size_t x, size_t y, size_t w);
     void writeLineV(size_t x, size_t y, size_t h);
+    void circleHelper(int x0, int y0, int r, int corners, int delta);
+    void fillCircleHelper(int x0, int y0, int r, int corners, int delta);
 
     size_t w;
     size_t h;

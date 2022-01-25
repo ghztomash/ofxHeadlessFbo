@@ -244,3 +244,114 @@ void ofxHeadlessFbo::drawTriangle(float x1,float y1,float x2,float y2,float x3, 
         drawLine(x3, y3, x1, y1);
     }
 }
+
+void ofxHeadlessFbo::drawCircle(float x, float y, float r) {
+    if (fill) {
+        writeLineV(x, y-r, 2*r+1);
+        fillCircleHelper(x, y, r, 3, 0);
+    } else {
+        int f = 1 - r;
+        int ddF_x = 1;
+        int ddF_y = -2 * r;
+        int _x = 0;
+        int _y = r;
+
+        writePoint(x, y + r);
+        writePoint(x, y - r);
+        writePoint(x + r, y);
+        writePoint(x - r, y);
+
+        while (_x < _y) {
+            if (f >= 0) {
+                _y--;
+                ddF_y += 2;
+                f += ddF_y;
+            }
+            _x++;
+            ddF_x += 2;
+            f += ddF_x;
+
+            writePoint(x + _x, y + _y);
+            writePoint(x - _x, y + _y);
+            writePoint(x + _x, y - _y);
+            writePoint(x - _x, y - _y);
+            writePoint(x + _y, y + _x);
+            writePoint(x - _y, y + _x);
+            writePoint(x + _y, y - _x);
+            writePoint(x - _y, y - _x);
+        }
+    }
+}
+
+void ofxHeadlessFbo::circleHelper(int x0, int y0, int r, int corners, int delta) {
+    int16_t f = 1 - r;
+    int16_t ddF_x = 1;
+    int16_t ddF_y = -2 * r;
+    int16_t x = 0;
+    int16_t y = r;
+
+    while (x < y) {
+        if (f >= 0) {
+            y--;
+            ddF_y += 2;
+            f += ddF_y;
+        }
+        x++;
+        ddF_x += 2;
+        f += ddF_x;
+        if (corners & 0x4) {
+            writePoint(x0 + x, y0 + y);
+            writePoint(x0 + y, y0 + x);
+        }
+        if (corners & 0x2) {
+            writePoint(x0 + x, y0 - y);
+            writePoint(x0 + y, y0 - x);
+        }
+        if (corners & 0x8) {
+            writePoint(x0 - y, y0 + x);
+            writePoint(x0 - x, y0 + y);
+        }
+        if (corners & 0x1) {
+            writePoint(x0 - y, y0 - x);
+            writePoint(x0 - x, y0 - y);
+        }
+    }
+}
+
+void ofxHeadlessFbo::fillCircleHelper(int x0, int y0, int r, int corners, int delta) {
+    int f = 1 - r;
+    int ddF_x = 1;
+    int ddF_y = -2 * r;
+    int x = 0;
+    int y = r;
+    int px = x;
+    int py = y;
+
+    delta++; // Avoid some +1's in the loop
+
+    while (x < y) {
+        if (f >= 0) {
+            y--;
+            ddF_y += 2;
+            f += ddF_y;
+        }
+        x++;
+        ddF_x += 2;
+        f += ddF_x;
+        // These checks avoid double-drawing certain lines
+        if (x < (y + 1)) {
+            if (corners & 1)
+                writeLineV(x0 + x, y0 - y, 2 * y + delta);
+            if (corners & 2)
+                writeLineV(x0 - x, y0 - y, 2 * y + delta);
+        }
+        if (y != py) {
+            if (corners & 1)
+                writeLineV(x0 + py, y0 - px, 2 * px + delta);
+            if (corners & 2)
+                writeLineV(x0 - py, y0 - px, 2 * px + delta);
+            py = y;
+        }
+        px = x;
+    }
+}
