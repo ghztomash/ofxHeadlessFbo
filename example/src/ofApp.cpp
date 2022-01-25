@@ -1,5 +1,6 @@
 #include "ofApp.h"
 #include "ofAppRunner.h"
+#include "ofColor.h"
 #include "ofGraphics.h"
 #include "ofUtils.h"
 #include <chrono>

@@ -74,6 +74,15 @@ void ofxHeadlessFbo::writePoint(size_t x, size_t y) {
 }
 
 void ofxHeadlessFbo::drawLine(float x1, float y1, float x2, float y2){
+    if (x1 < 0)
+        x1 = 0;
+    if (x2 < 0)
+        x2 = 0;
+    if (y1 < 0)
+        y1 = 0;
+    if (y2 < 0)
+        y2 = 0;
+
     if (x1 == x2) { // vertical line
         if (y1 > y2 )
             std::swap(y1, y2);
@@ -246,6 +255,8 @@ void ofxHeadlessFbo::drawTriangle(float x1,float y1,float x2,float y2,float x3, 
 }
 
 void ofxHeadlessFbo::drawCircle(float x, float y, float r) {
+    if (r <= 0)
+        r = 0;
     if (fill) {
         writeLineV(x, y-r, 2*r+1);
         fillCircleHelper(x, y, r, 3, 0);
@@ -357,6 +368,13 @@ void ofxHeadlessFbo::fillCircleHelper(int x0, int y0, int r, int corners, int de
 }
 
 void ofxHeadlessFbo::drawRectRounded(float x, float y, float w, float h, float r) {
+    if (w<0)
+        w=0;
+    if (h<0)
+        h=0;
+    if (r<0)
+        r=0;
+
     int max_radius = ((w < h) ? w : h) / 2; // 1/2 minor axis
     if (r > max_radius)
             r = max_radius;
@@ -380,6 +398,10 @@ void ofxHeadlessFbo::drawRectRounded(float x, float y, float w, float h, float r
 }
 
 void ofxHeadlessFbo::drawEllipse(float x, float y, float w, float h) {
+    if (w<0)
+        w=0;
+    if (h<0)
+        h=0;
     int x0 = x - w/2.0, y0 = y + h/2.0, x1 = x+w/2.0, y1 = y-h/2.0;
     long a = abs(x1 - x0), b = abs(y1 - y0), b1 = b & 1; /* values of diameter */
     long dx = 4 * (1 - a) * b * b, dy = 4 * (b1 + 1) * a * a; /* error increment */
