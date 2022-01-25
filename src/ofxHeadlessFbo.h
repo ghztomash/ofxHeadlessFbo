@@ -76,10 +76,46 @@ class ofxHeadlessFbo {
 
     /// \brief draw the current data as texture.
     void draw(float x, float y);
+
+    /// Draws a point: (x1,y1).
+    /// ~~~~{.cpp}
+    /// void ofApp::draw(){
+    ///     hfbo.drawPoint(10,10);
+    /// }
+    /// ~~~~
+    void drawPoint(float x, float y);
+    
+    /// Draws a line between two points: (x1,y1),(x2,y2).
+    /// ~~~~{.cpp}
+    /// void ofApp::draw(){
+    ///     hfbo.drawLine(10,10,100,100);
+    /// }
+    /// ~~~~
+    void drawLine(float x1, float y1, float x2, float y2);
+
+    /// \brief Draws a rectangle from point x,y with a given width and height.
+    /// ~~~~{.cpp}
+    /// void ofApp::draw(){
+    ///     hfbo.drawRect(10,10,100,100);
+    /// }
+    /// ~~~~
+    void drawRectangle(float x, float y, float w, float h);
+
+    void setFill();
+    void setNoFill();
+
+    size_t getWidth();
+    size_t getHeight();
     
     private:
+    void writePoint(size_t x, size_t y);
+    void writeLine(size_t x1, size_t y1, size_t x2, size_t y2);
+    void writeLineH(size_t x, size_t y, size_t w);
+    void writeLineV(size_t x, size_t y, size_t h);
+
     size_t w;
     size_t h;
+    bool fill = true;
     ofPixels pixels;
     ofColor color;
 };

@@ -1,4 +1,5 @@
 #include "ofApp.h"
+#include "ofGraphics.h"
 
 //--------------------------------------------------------------
 void ofApp::setup(){
@@ -9,11 +10,22 @@ void ofApp::setup(){
 
     fbo.begin();
     ofClear(ofColor::green);
+    ofSetColor(ofColor::blue);
+    ofDrawRectangle(25,25,50,50);
+    ofSetColor(ofColor::red);
+    ofDrawLine(0, 0, 100, 100);
+    ofDrawLine(1, 1, 1, 100);
+    ofDrawLine(1, 1, 100, 1);
     fbo.end();
 
     hfbo.allocate(100, 100, OF_PIXELS_RGB);
-    hfbo.setColor(ofColor::red);
     hfbo.clear(ofColor::red);
+    hfbo.setColor(ofColor::blue);
+    hfbo.drawRectangle(25,25,50,50);
+    hfbo.setColor(ofColor::green);
+    hfbo.drawLine(0, 0, 100, 100);
+    hfbo.drawLine(1, 1, 1, 100);
+    hfbo.drawLine(1, 1, 100, 1);
 
     fbo.readToPixels(pix);
     //hfbo.setFromPixels(pix, 100, 100, OF_PIXELS_RGB);
