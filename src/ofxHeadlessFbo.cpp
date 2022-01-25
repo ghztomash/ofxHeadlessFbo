@@ -379,3 +379,36 @@ void ofxHeadlessFbo::drawRectRounded(float x, float y, float w, float h, float r
     }
 }
 
+void ofxHeadlessFbo::drawEllipse(float x, float y, float w, float h) {
+    int x0 = x - w/2.0, y0 = y + h/2.0, x1 = x+w/2.0, y1 = y-h/2.0;
+    long a = abs(x1 - x0), b = abs(y1 - y0), b1 = b & 1; /* values of diameter */
+    long dx = 4 * (1 - a) * b * b, dy = 4 * (b1 + 1) * a * a; /* error increment */
+    long err = dx + dy + b1 * a * a, e2; /* error of 1.step */
+
+    if (x0 > x1) { x0 = x1; x1 += a; } /* if called with swapped points */
+    if (y0 > y1) y0 = y1; /* .. exchange them */
+    y0 += (b + 1) / 2; /* starting pixel */
+    y1 = y0 - b1;
+    a *= 8 * a;
+    b1 = 8 * b * b;
+
+    do {
+        if(fill){
+            writeLineV(x1, y1, y0-y1);
+            writeLineV(x0, y1, y0-y1);
+        }else{
+            drawPoint(x1, y0); /*   I. Quadrant */ //bottom right
+            drawPoint(x0, y0); /*  II. Quadrant */ //bottom left
+            drawPoint(x0, y1); /* III. Quadrant */ //top left
+            drawPoint(x1, y1); /*  IV. Quadrant */ //top right
+        }
+        e2 = 2 * err;
+        if (e2 >= dx) { x0++; x1--; err += dx += b1; } /* x step */
+        if (e2 <= dy) { y0++; y1--; err += dy += a; }  /* y step */
+    } while (x0 <= x1);
+
+    while (y0 - y1 < b) {  /* too early stop of flat ellipses a=1 */
+        drawPoint(x0 - 1, ++y0); /* -> complete tip of ellipse */
+        drawPoint(x0 - 1, --y1);
+    }
+}

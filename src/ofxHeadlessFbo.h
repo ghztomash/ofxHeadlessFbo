@@ -132,6 +132,14 @@ class ofxHeadlessFbo {
     /// ~~~~
     void drawRectRounded(float x, float y, float w, float h, float r);
 
+    /// \brief Draws an ellipse from point (x,y) with a given width (w) and height (h).
+    /// ~~~~{.cpp}
+    /// void ofApp::draw(){
+    ///     hfbo.drawEllipse(10,10,50,30);
+    /// }
+    /// ~~~~
+    void drawEllipse(float x, float y, float w, float h);
+
     void setFill();
     void setNoFill();
 

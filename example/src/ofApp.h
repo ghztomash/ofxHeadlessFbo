@@ -26,6 +26,5 @@ class ofApp : public ofBaseApp{
 
         ofxHeadlessFbo hfbo;
 
-        ofPixels pix;
         ofFbo fbo;
 };

@@ -8,7 +8,6 @@ void ofApp::setup(){
     size = (ofGetWidth() / 2.0) - 20;
     
     fbo.allocate(size, size, GL_RGB);
-    pix.allocate(size, size, OF_PIXELS_RGB);
 
     fbo.begin();
     ofClear(ofColor::green);
@@ -19,6 +18,7 @@ void ofApp::setup(){
     ofSetColor(ofColor::white);
     ofDrawCircle(size/2.0,size/2.0, size/4.0);
     ofDrawRectRounded(20, 20, size - 40, 50, 30);
+    ofDrawEllipse(size/2.0, size - 40, size/2.0, 40);
     ofSetColor(ofColor::red);
     ofDrawLine(0, 0, size, size);
     ofDrawLine(size, 0, 0, size);
@@ -32,14 +32,12 @@ void ofApp::setup(){
     hfbo.drawRectangle(size/4.0,size/4.0,size/2.0,size/2.0);
     hfbo.setColor(ofColor::white);
     hfbo.drawCircle(size/2.0,size/2.0, size/4.0);
-    //hfbo.setNoFill();
     hfbo.drawRectRounded(20, 20, size - 40, 50, 30);
+    hfbo.drawEllipse(size/2.0, size - 40, size/2.0, 40);
     hfbo.setColor(ofColor::green);
     hfbo.drawLine(0, 0, size, size);
     hfbo.drawLine(size, 0, 0, size);
 
-    //fbo.readToPixels(pix);
-    //hfbo.setFromPixels(pix, 100, 100, OF_PIXELS_RGB);
 }
 
 //--------------------------------------------------------------
