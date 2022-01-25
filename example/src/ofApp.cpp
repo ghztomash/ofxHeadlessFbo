@@ -18,6 +18,7 @@ void ofApp::setup(){
     ofDrawRectangle(size/4.0,size/4.0,size/2.0,size/2.0);
     ofSetColor(ofColor::white);
     ofDrawCircle(size/2.0,size/2.0, size/4.0);
+    ofDrawRectRounded(20, 20, size - 40, 50, 30);
     ofSetColor(ofColor::red);
     ofDrawLine(0, 0, size, size);
     ofDrawLine(size, 0, 0, size);
@@ -31,6 +32,8 @@ void ofApp::setup(){
     hfbo.drawRectangle(size/4.0,size/4.0,size/2.0,size/2.0);
     hfbo.setColor(ofColor::white);
     hfbo.drawCircle(size/2.0,size/2.0, size/4.0);
+    //hfbo.setNoFill();
+    hfbo.drawRectRounded(20, 20, size - 40, 50, 30);
     hfbo.setColor(ofColor::green);
     hfbo.drawLine(0, 0, size, size);
     hfbo.drawLine(size, 0, 0, size);

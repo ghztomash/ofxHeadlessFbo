@@ -122,6 +122,16 @@ class ofxHeadlessFbo {
     /// ~~~~
     void drawCircle(float x, float y, float r);
 
+    /// \brief Draws a rectangle from point X, Y with a given width, height and radius of
+    /// rounded corners.
+    ///
+    /// ~~~~{.cpp}
+    /// void ofApp::draw(){
+    ///     hfbo.drawRectRounded(10, 10, 100, 100, 10);
+    /// }
+    /// ~~~~
+    void drawRectRounded(float x, float y, float w, float h, float r);
+
     void setFill();
     void setNoFill();
 
@@ -133,7 +143,7 @@ class ofxHeadlessFbo {
     void writeLine(size_t x1, size_t y1, size_t x2, size_t y2);
     void writeLineH(size_t x, size_t y, size_t w);
     void writeLineV(size_t x, size_t y, size_t h);
-    void circleHelper(int x0, int y0, int r, int corners, int delta);
+    void circleHelper(int x0, int y0, int r, int corners);
     void fillCircleHelper(int x0, int y0, int r, int corners, int delta);
 
     size_t w;

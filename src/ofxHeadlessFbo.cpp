@@ -283,12 +283,12 @@ void ofxHeadlessFbo::drawCircle(float x, float y, float r) {
     }
 }
 
-void ofxHeadlessFbo::circleHelper(int x0, int y0, int r, int corners, int delta) {
-    int16_t f = 1 - r;
-    int16_t ddF_x = 1;
-    int16_t ddF_y = -2 * r;
-    int16_t x = 0;
-    int16_t y = r;
+void ofxHeadlessFbo::circleHelper(int x0, int y0, int r, int corners) {
+    int f = 1 - r;
+    int ddF_x = 1;
+    int ddF_y = -2 * r;
+    int x = 0;
+    int y = r;
 
     while (x < y) {
         if (f >= 0) {
@@ -355,3 +355,27 @@ void ofxHeadlessFbo::fillCircleHelper(int x0, int y0, int r, int corners, int de
         px = x;
     }
 }
+
+void ofxHeadlessFbo::drawRectRounded(float x, float y, float w, float h, float r) {
+    int max_radius = ((w < h) ? w : h) / 2; // 1/2 minor axis
+    if (r > max_radius)
+            r = max_radius;
+    
+    if (fill) {
+        drawRectangle(x + r, y, w - 2 * r, h);
+        // draw four corners
+        fillCircleHelper(x + w - r - 1, y + r, r, 1, h - 2 * r - 1);
+        fillCircleHelper(x + r, y + r, r, 2, h - 2 * r - 1);
+    } else {
+        writeLineH(x + r, y, w - 2 * r);         // Top
+        writeLineH(x + r, y + h - 1, w - 2 * r); // Bottom
+        writeLineV(x, y + r, h - 2 * r);         // Left
+        writeLineV(x + w - 1, y + r, h - 2 * r); // Right
+        // draw four corners
+        circleHelper(x + r, y + r, r, 1);
+        circleHelper(x + w - r - 1, y + r, r, 2);
+        circleHelper(x + w - r - 1, y + h - r - 1, r, 4);
+        circleHelper(x + r, y + h - r - 1, r, 8);
+    }
+}
+
