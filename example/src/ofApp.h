@@ -2,6 +2,7 @@
 
 #include "ofMain.h"
 #include "ofxHeadlessFbo.h"
+#include <chrono>
 
 class ofApp : public ofBaseApp{
 
@@ -24,7 +25,15 @@ class ofApp : public ofBaseApp{
 
         int size = 400;
 
-        ofxHeadlessFbo hfbo;
+        bool fill = true;
+        bool followMouse = false;
 
+        ofxHeadlessFbo hfbo;
         ofFbo fbo;
+
+        //for benchmark
+        std::chrono::high_resolution_clock::time_point t1;
+        std::chrono::high_resolution_clock::time_point t2;
+        std::chrono::duration<double, std::milli> ms_fbo;
+        std::chrono::duration<double, std::milli> ms_hfbo;
 };
