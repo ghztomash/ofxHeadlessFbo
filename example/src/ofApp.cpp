@@ -8,24 +8,25 @@ void ofApp::setup(){
     tex.allocate(100, 100, GL_RGB);
 
     fbo.begin();
-    ofClear(ofColor::red);
+    ofClear(ofColor::green);
     fbo.end();
 
     hfbo.allocate(100, 100, OF_PIXELS_RGB);
     hfbo.setColor(ofColor::red);
-    hfbo.setBackground(ofColor::red);
+    hfbo.clear(ofColor::red);
+
+    fbo.readToPixels(pix);
+    //hfbo.setFromPixels(pix, 100, 100, OF_PIXELS_RGB);
 }
 
 //--------------------------------------------------------------
 void ofApp::update(){
-    hfbo.readPixels(pix);
-    tex.allocate(pix);
 }
 
 //--------------------------------------------------------------
 void ofApp::draw(){
     // draw the virtual FBO
-    tex.draw(10, 10);
+    hfbo.draw(10, 10);
     // draw the reference FBO
     fbo.draw(120, 10);
 }

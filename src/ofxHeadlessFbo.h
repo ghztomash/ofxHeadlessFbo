@@ -35,14 +35,6 @@ class ofxHeadlessFbo {
 	/// \param h Height of pixel array
 	/// \param pixelFormat ofPixelFormat defining number of channels per pixel
 	void allocate(size_t w, size_t h, ofPixelFormat pixelFormat);
-
-    /// \brief Clear all the data from the ofPixels objects.
-	/// After calling this you'll need to allocate()
-    /// the ofPixels object again to use it.
-    void clear();
-
-    /// \brief fill the buffer with a single color.
-    void setBackground(const ofColor &color);
     
     /// \brief Get whether memory has been allocated for an ofPixels object or not
     ///
@@ -66,16 +58,28 @@ class ofxHeadlessFbo {
     /// ~~~~
     void setColor(const ofColor & color);
 
-    /// \section Read Pixel Data
+    /// \brief fill the buffer with a single color.
+    void clear(const ofColor &color);
+    
 	/// \brief Read current data from the CPU into pixels.
 	///
 	/// \param pixels Target ofPixels reference.
 	void readPixels(ofPixels & pixels) const;
 
+    /// /brief Set the internal pixels from existing pixel data
+    /// 
+    /// \param newPixels The new pixel array  
+    /// \param w Width of pixel array
+	/// \param h Height of pixel array
+	/// \param pixelFormat ofPixelFormat defining number of channels per pixel
+    void setFromPixels(ofPixels newPixels,size_t w, size_t h, ofPixelFormat pixelFormat);
+
+    /// \brief draw the current data as texture.
+    void draw(float x, float y);
+    
     private:
     size_t w;
     size_t h;
     ofPixels pixels;
     ofColor color;
-    bool allocated;
 };
