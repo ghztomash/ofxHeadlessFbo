@@ -172,38 +172,40 @@ void ofxHeadlessFbo::drawSquareCentered(float x, float y, float d) {
 void ofxHeadlessFbo::drawTriangle(float x1,float y1,float x2,float y2,float x3, float y3) {
     if (fill) {
         int a, b, y, last;
+        int _x1 = x1, _y1 = y1, _x2 = x2, _y2 = y2, _x3 = x3, _y3 = y3;
 
         // Sort coordinates by Y order (y3 >= y2 >= y1)
-        if (y1 > y2) {
-            std::swap(y1, y2);
-            std::swap(x1, x2);
+        if (_y1 > _y2) {
+            std::swap(_y1, _y2);
+            std::swap(_x1, _x2);
         }
-        if (y2 > y3) {
-            std::swap(y3, y2);
-            std::swap(x3, x2);
+        if (_y2 > _y3) {
+            std::swap(_y3, _y2);
+            std::swap(_x3, _x2);
         }
-        if (y1 > y2) {
-            std::swap(y1, y2);
-            std::swap(x1, x2);
+        if (_y1 > _y2) {
+            std::swap(_y1, _y2);
+            std::swap(_x1, _x2);
         }
 
-        if (y1 == y3) { // Handle awkward all-on-same-line case as its own thing
-            a = b = x1;
-            if (x2 < a)
-                a = x2;
-            else if (x2 > b)
-                b = x2;
-            if (x3 < a)
-                a = x3;
-            else if (x3 > b)
-                b = x3;
-            writeLineH(a, y1, b - a + 1);
+        if (_y1 == _y3) { // Handle awkward all-on-same-line case as its own thing
+            a = b = _x1;
+            if (_x2 < a)
+                a = _x2;
+            else if (_x2 > b)
+                b = _x2;
+            if (_x3 < a)
+                a = _x3;
+            else if (_x3 > b)
+                b = _x3;
+            writeLineH(a, _y1, b - a + 1);
             return;
         }
 
-        int dx12 = x2 - x1, dy12 = y2 - y1, dx13 = x3 - x1, dy13 = y3 - y1,
-            dx23 = x3 - x2, dy23 = y3 - y2;
+        int dx12 = _x2 - _x1, dy12 = _y2 - _y1, dx13 = _x3 - _x1, dy13 = _y3 - _y1,
+            dx23 = _x3 - _x2, dy23 = _y3 - _y2;
         long sa = 0, sb = 0;
+
 
         // For upper part of triangle, find scanline crossings for segments
         // 0-1 and 0-2.  If y2=y3 (flat-bottomed triangle), the scanline y2
@@ -211,14 +213,14 @@ void ofxHeadlessFbo::drawTriangle(float x1,float y1,float x2,float y2,float x3, 
         // error there), otherwise scanline y2 is skipped here and handled
         // in the second loop...which also avoids a /0 error here if y1=y2
         // (flat-topped triangle).
-        if (y2 == y3)
-            last = y2; // Include y2 scanline
+        if (_y2 == _y3)
+            last = _y2; // Include y2 scanline
         else
-            last = y2 - 1; // Skip it
-
-        for (y = y1; y <= last; y++) {
-            a = x1 + sa / dy12;
-            b = x1 + sb / dy13;
+            last = _y2 - 1; // Skip it
+        
+        for (y = _y1; y <= last; y++) {
+            a = _x1 + sa / dy12;
+            b = _x1 + sb / dy13;
             sa += dx12;
             sb += dx13;
             /* longhand:
@@ -232,11 +234,11 @@ void ofxHeadlessFbo::drawTriangle(float x1,float y1,float x2,float y2,float x3, 
 
         // For lower part of triangle, find scanline crossings for segments
         // 1-3 and 2-3.  This loop is skipped if y2=y3.
-        sa = (long)dx23 * (y - y2);
-        sb = (long)dx13 * (y - y1);
-        for (; y <= y3; y++) {
-            a = x2 + sa / dy23;
-            b = x1 + sb / dy13;
+        sa = (long)dx23 * (y - _y2);
+        sb = (long)dx13 * (y - _y1);
+        for (; y <= _y3; y++) {
+            a = _x2 + sa / dy23;
+            b = _x1 + sb / dy13;
             sa += dx23;
             sb += dx13;
             /* longhand:
