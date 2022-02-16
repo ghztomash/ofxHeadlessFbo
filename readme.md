@@ -20,7 +20,7 @@ contribute improvements.
 
 Download the addon into your `openframeworks/addons/` directory or
 install using git:
-`git clone https://github.com/`
+`git clone https://github.com/ghztomash/ofxHeadlessFbo.git`
 
 ## Use
 
