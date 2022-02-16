@@ -1,3 +1,30 @@
+/*
+Software License Agreement (BSD License)
+
+Copyright (c) 2022 Tomash GHz.  All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+- Redistributions of source code must retain the above copyright notice,
+  this list of conditions and the following disclaimer.
+- Redistributions in binary form must reproduce the above copyright notice,
+  this list of conditions and the following disclaimer in the documentation
+  and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
+*/
+
 #include "ofApp.h"
 #include "ofAppRunner.h"
 #include "ofColor.h"
@@ -9,14 +36,18 @@
 void ofApp::setup(){
     size = (ofGetWidth() / 2.0) - 20;
     
+    // allocate FBO buffers
     fbo.allocate(size, size, GL_RGB);
     hfbo.allocate(size, size, OF_PIXELS_RGB);
 }
 
 //--------------------------------------------------------------
 void ofApp::update(){
+
+    // draw in refference FBO
+    t1 = std::chrono::high_resolution_clock::now(); // start benchmark timer
     fbo.begin();
-    t1 = std::chrono::high_resolution_clock::now();
+
     if (fill)
         ofFill();
     else
@@ -31,16 +62,16 @@ void ofApp::update(){
     ofDrawRectRounded(20, 20, size - 40, 50, 30);
     ofDrawEllipse(size/2.0, size - 40, size/2.0, 40);
     ofSetColor(ofColor::red);
-    ofDrawLine(0, 0, size, size);
     if(followMouse)
         ofDrawLine(0, 0, mouseX, mouseY);
-    ofDrawLine(size, 0, 0, size);
-    t2 = std::chrono::high_resolution_clock::now();
-    fbo.end();
 
+    fbo.end();
+    t2 = std::chrono::high_resolution_clock::now(); // end bemchmark timer
     ms_fbo = t2-t1;
 
-    t1 = std::chrono::high_resolution_clock::now();
+    // draw in headless FBO
+    t1 = std::chrono::high_resolution_clock::now(); // start benchmark timer
+
     if (fill)
         hfbo.setFill();
     else
@@ -55,12 +86,10 @@ void ofApp::update(){
     hfbo.drawRectRounded(20, 20, size - 40, 50, 30);
     hfbo.drawEllipse(size/2.0, size - 40, size/2.0, 40);
     hfbo.setColor(ofColor::green);
-    hfbo.drawLine(0, 0, size, size);
     if(followMouse)
         hfbo.drawLine(0, 0, mouseX, mouseY);
-    hfbo.drawLine(size, 0, 0, size);
-    t2 = std::chrono::high_resolution_clock::now();
 
+    t2 = std::chrono::high_resolution_clock::now(); // end benchmark timer
     ms_hfbo = t2-t1;
 }
 
@@ -79,13 +108,15 @@ void ofApp::draw(){
 
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key){
-    fill = false;
+    if(key == 'f')
+        fill = false;
 
 }
 
 //--------------------------------------------------------------
 void ofApp::keyReleased(int key){
-    fill = true;
+    if(key == 'f')
+        fill = true;
 }
 
 //--------------------------------------------------------------
