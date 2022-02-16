@@ -29,6 +29,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "ofAppRunner.h"
 #include "ofColor.h"
 #include "ofGraphics.h"
+#include "ofPixels.h"
 #include "ofUtils.h"
 #include <chrono>
 
@@ -37,8 +38,8 @@ void ofApp::setup(){
     size = (ofGetWidth() / 2.0) - 20;
     
     // allocate FBO buffers
-    fbo.allocate(size, size, GL_RGB);
-    hfbo.allocate(size, size, OF_PIXELS_RGB);
+    fbo.allocate(size, size, GL_RGBA);
+    hfbo.allocate(size, size, OF_PIXELS_RGBA);
 }
 
 //--------------------------------------------------------------
@@ -52,18 +53,22 @@ void ofApp::update(){
         ofFill();
     else
         ofNoFill();
-    ofClear(ofColor::green);
-    ofSetColor(ofColor::darkCyan);
+    ofClear(ofColor(0,0,0,0));
+    ofEnableAlphaBlending();
+
+    ofSetColor(ofColor(0,255,0));
     ofDrawTriangle( 0, size, size/2.0, 0, size, size);
-    ofSetColor(ofColor::blue); 
+    ofSetColor(ofColor(0,0,255,127));
     ofDrawRectangle(size/4.0,size/4.0,size/2.0,size/2.0);
-    ofSetColor(ofColor::white);
+    ofSetColor(ofColor(255,255,255,127));
     ofDrawCircle(size/2.0,size/2.0, size/4.0);
     ofDrawRectRounded(20, 20, size - 40, 50, 30);
     ofDrawEllipse(size/2.0, size - 40, size/2.0, 40);
     ofSetColor(ofColor::red);
     if(followMouse)
         ofDrawLine(0, 0, mouseX, mouseY);
+
+    ofDisableAlphaBlending();
 
     fbo.end();
     t2 = std::chrono::high_resolution_clock::now(); // end bemchmark timer
@@ -76,18 +81,21 @@ void ofApp::update(){
         hfbo.setFill();
     else
         hfbo.setNoFill();
-    hfbo.clear(ofColor::red);
-    hfbo.setColor(ofColor::darkCyan);
+    hfbo.clear(ofColor(0,0,0,0));
+    hfbo.enableAlphaBlending();
+
+    hfbo.setColor(ofColor(0,255,0));
     hfbo.drawTriangle( 0, size, size/2.0, 0, size, size);
-    hfbo.setColor(ofColor::blue);
+    hfbo.setColor(ofColor(0,0,255,127));
     hfbo.drawRectangle(size/4.0,size/4.0,size/2.0,size/2.0);
-    hfbo.setColor(ofColor::white);
+    hfbo.setColor(ofColor(255,255,255,127));
     hfbo.drawCircle(size/2.0,size/2.0, size/4.0);
     hfbo.drawRectRounded(20, 20, size - 40, 50, 30);
     hfbo.drawEllipse(size/2.0, size - 40, size/2.0, 40);
     hfbo.setColor(ofColor::green);
     if(followMouse)
         hfbo.drawLine(0, 0, mouseX, mouseY);
+    hfbo.disableAlphaBlending();
 
     t2 = std::chrono::high_resolution_clock::now(); // end benchmark timer
     ms_hfbo = t2-t1;

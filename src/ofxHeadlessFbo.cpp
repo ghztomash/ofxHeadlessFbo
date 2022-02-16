@@ -73,6 +73,14 @@ void ofxHeadlessFbo::setNoFill() {
     fill = false;
 }
 
+void ofxHeadlessFbo::enableAlphaBlending() {
+    alphaBlending = true;
+}
+
+void ofxHeadlessFbo::disableAlphaBlending() {
+    alphaBlending = false;
+}
+
 void ofxHeadlessFbo::draw(float x, float y) {
     if (this->isAllocated()) {
         ofTexture tex;
@@ -98,7 +106,20 @@ void ofxHeadlessFbo::writePoint(size_t x, size_t y) {
     if ((x < 0) || (y < 0) || (x >= w) || (y >= h))
         return;
 
-    pixels.setColor(x, y, this->color);
+    if (alphaBlending) {
+        ofColor cb = pixels.getColor(x,y);
+        ofColor ca = this->color;
+        float aa = ca.a/255.0;
+        float ab = cb.a/255.0;
+        float a0 = aa + ab*(1.0-aa);
+        float r0 = (ca.r*aa + cb.r*ab*(1.0-aa))/a0;
+        float g0 = (ca.g*aa + cb.g*ab*(1.0-aa))/a0;
+        float b0 = (ca.b*aa + cb.b*ab*(1.0-aa))/a0;
+        ofColor c0(r0,g0,b0, a0*255);
+        pixels.setColor(x, y, c0);
+    } else {
+        pixels.setColor(x, y, this->color);
+    }
 }
 
 void ofxHeadlessFbo::drawLine(float x1, float y1, float x2, float y2){
@@ -447,7 +468,8 @@ void ofxHeadlessFbo::drawEllipse(float x, float y, float w, float h) {
     do {
         if(fill){
             writeLineV(x1, y1, y0-y1);
-            writeLineV(x0, y1, y0-y1);
+            if(x0!=x1)
+                writeLineV(x0, y1, y0-y1);
         }else{
             drawPoint(x1, y0); /*   I. Quadrant */ //bottom right
             drawPoint(x0, y0); /*  II. Quadrant */ //bottom left

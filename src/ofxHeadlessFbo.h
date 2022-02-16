@@ -78,10 +78,10 @@ class ofxHeadlessFbo {
     ///
     /// ~~~~{.cpp}
     /// void ofApp::draw(){
-    ///     ofEnableAlphaBlending();    // turn on alpha blending
-    ///     ofSetColor(255,0,0,127);    // red, 50% transparent
-    ///     ofDrawRectangle(20,20,100,100);
-    ///     ofDisableAlphaBlending();   // turn it back off, if you don't need it
+    ///     hfbo.enableAlphaBlending();    // turn on alpha blending
+    ///     hfbo.setColor(255,0,0,127);    // red, 50% transparent
+    ///     hfbo.drawRectangle(20,20,100,100);
+    ///     hfbo.disableAlphaBlending();   // turn it back off, if you don't need it
     /// }
     /// ~~~~
     void setColor(const ofColor & color);
@@ -171,6 +171,12 @@ class ofxHeadlessFbo {
     void setFill();
     void setNoFill();
 
+    /// @brief Turns off alpha blending
+    void enableAlphaBlending();
+
+    /// @brief Turns off alpha blending
+    void disableAlphaBlending();
+
     size_t getWidth();
     size_t getHeight();
     
@@ -185,6 +191,7 @@ class ofxHeadlessFbo {
     size_t w;
     size_t h;
     bool fill = true;
+    bool alphaBlending = false;
     ofPixels pixels;
     ofColor color;
 };
