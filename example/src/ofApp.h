@@ -53,6 +53,7 @@ class ofApp : public ofBaseApp{
         int size = 400;
 
         bool fill = true;
+        bool blending = false;
         bool followMouse = false;
 
         ofxHeadlessFbo hfbo;

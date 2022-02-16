@@ -54,7 +54,10 @@ void ofApp::update(){
     else
         ofNoFill();
     ofClear(ofColor(0,0,0,0));
-    ofEnableAlphaBlending();
+    if(blending)
+        ofEnableAlphaBlending();
+    else
+        ofDisableAlphaBlending();
 
     ofSetColor(ofColor(0,255,0));
     ofDrawTriangle( 0, size, size/2.0, 0, size, size);
@@ -68,8 +71,6 @@ void ofApp::update(){
     if(followMouse)
         ofDrawLine(0, 0, mouseX, mouseY);
 
-    ofDisableAlphaBlending();
-
     fbo.end();
     t2 = std::chrono::high_resolution_clock::now(); // end bemchmark timer
     ms_fbo = t2-t1;
@@ -82,7 +83,10 @@ void ofApp::update(){
     else
         hfbo.setNoFill();
     hfbo.clear(ofColor(0,0,0,0));
-    hfbo.enableAlphaBlending();
+    if(blending)
+        hfbo.enableAlphaBlending();
+    else
+        hfbo.disableAlphaBlending();
 
     hfbo.setColor(ofColor(0,255,0));
     hfbo.drawTriangle( 0, size, size/2.0, 0, size, size);
@@ -95,7 +99,6 @@ void ofApp::update(){
     hfbo.setColor(ofColor::green);
     if(followMouse)
         hfbo.drawLine(0, 0, mouseX, mouseY);
-    hfbo.disableAlphaBlending();
 
     t2 = std::chrono::high_resolution_clock::now(); // end benchmark timer
     ms_hfbo = t2-t1;
@@ -118,7 +121,8 @@ void ofApp::draw(){
 void ofApp::keyPressed(int key){
     if(key == 'f')
         fill = false;
-
+    if(key == 'b')
+        blending = !blending;
 }
 
 //--------------------------------------------------------------
