@@ -105,6 +105,7 @@ void ofxHeadlessFbo::allocate(size_t w, size_t h, ofPixelFormat pixelFormat) {
     pixels.allocate(w, h, pixelFormat);
     this->w = w;
     this->h = h;
+    markTextureDirty();
 }
 
 bool ofxHeadlessFbo::isAllocated() {
@@ -117,6 +118,7 @@ void ofxHeadlessFbo::setColor(const ofColor &color) {
 
 void ofxHeadlessFbo::clear(const ofColor &color) {
     pixels.setColor(color);
+    markTextureDirty();
 }
 
 void ofxHeadlessFbo::readPixels(ofPixels &pixels) const {
@@ -132,6 +134,7 @@ void ofxHeadlessFbo::setFromPixels(ofPixels newPixels, size_t w, size_t h, ofPix
     pixels = newPixels;
     this->w = w;
     this->h = h;
+    markTextureDirty();
 }
 
 void ofxHeadlessFbo::setFill() {
@@ -151,11 +154,29 @@ void ofxHeadlessFbo::disableAlphaBlending() {
 }
 
 void ofxHeadlessFbo::draw(float x, float y) {
-    if (this->isAllocated()) {
-        ofTexture tex;
-        tex.allocate(pixels);
-        tex.draw(x, y);
+    if (!isAllocated()) {
+        return;
     }
+
+    const size_t currentW = pixels.getWidth();
+    const size_t currentH = pixels.getHeight();
+    const ofPixelFormat currentPixelFormat = pixels.getPixelFormat();
+
+    if (!textureCache.isAllocated() || currentW != textureW || currentH != textureH ||
+        currentPixelFormat != texturePixelFormat) {
+        textureCache.allocate(pixels);
+        textureW = currentW;
+        textureH = currentH;
+        texturePixelFormat = currentPixelFormat;
+        textureDirty = true;
+    }
+
+    if (textureDirty) {
+        textureCache.loadData(pixels);
+        textureDirty = false;
+    }
+
+    textureCache.draw(x, y);
 }
 
 size_t ofxHeadlessFbo::getWidth() {
@@ -188,6 +209,12 @@ void ofxHeadlessFbo::writePoint(size_t x, size_t y) {
     } else {
         pixels.setColor(x, y, this->color);
     }
+
+    markTextureDirty();
+}
+
+void ofxHeadlessFbo::markTextureDirty() {
+    textureDirty = true;
 }
 
 void ofxHeadlessFbo::drawLine(float x1, float y1, float x2, float y2) {

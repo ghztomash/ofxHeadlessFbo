@@ -186,11 +186,17 @@ class ofxHeadlessFbo {
     void writeLineV(size_t x, size_t y, size_t h);
     void circleHelper(int x0, int y0, int r, int corners);
     void fillCircleHelper(int x0, int y0, int r, int corners, int delta);
+    void markTextureDirty();
 
     size_t w = 0;
     size_t h = 0;
     bool fill = true;
     bool alphaBlending = false;
+    bool textureDirty = true;
+    size_t textureW = 0;
+    size_t textureH = 0;
+    ofPixelFormat texturePixelFormat = OF_PIXELS_UNKNOWN;
+    ofTexture textureCache;
     ofPixels pixels;
     ofColor color;
 };
