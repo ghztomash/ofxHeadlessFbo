@@ -95,6 +95,40 @@ int clampToRange(int value, int minValue, int maxValue) {
     }
     return value;
 }
+
+inline unsigned char blendOverOpaqueChannel(unsigned char src, unsigned char dst, unsigned char srcAlpha) {
+    const unsigned int invSrcAlpha = 255u - srcAlpha;
+    return static_cast<unsigned char>((static_cast<unsigned int>(src) * srcAlpha +
+                                       static_cast<unsigned int>(dst) * invSrcAlpha + 127u) /
+                                      255u);
+}
+
+inline unsigned char blendOverChannel(unsigned char src,
+                                      unsigned char dst,
+                                      unsigned char srcAlpha,
+                                      unsigned char dstAlpha,
+                                      unsigned char outAlpha,
+                                      unsigned int invSrcAlpha) {
+    if (outAlpha == 0) {
+        return 0;
+    }
+
+    const unsigned int dstPremultiplied =
+        (static_cast<unsigned int>(dst) * dstAlpha * invSrcAlpha + 127u) / 255u;
+    const unsigned int outPremultiplied = static_cast<unsigned int>(src) * srcAlpha + dstPremultiplied;
+    return static_cast<unsigned char>((outPremultiplied + outAlpha / 2u) / outAlpha);
+}
+
+inline unsigned char monoFromRgb(unsigned char r, unsigned char g, unsigned char b) {
+    unsigned char maxValue = r;
+    if (g > maxValue) {
+        maxValue = g;
+    }
+    if (b > maxValue) {
+        maxValue = b;
+    }
+    return maxValue;
+}
 } // namespace
 
 void ofxHeadlessFbo::allocate(size_t w, size_t h, ofPixelFormat pixelFormat) {
@@ -105,6 +139,8 @@ void ofxHeadlessFbo::allocate(size_t w, size_t h, ofPixelFormat pixelFormat) {
     pixels.allocate(w, h, pixelFormat);
     this->w = w;
     this->h = h;
+    this->pixelFormat = pixelFormat;
+    this->numChannels = pixels.getNumChannels();
     markTextureDirty();
 }
 
@@ -134,6 +170,8 @@ void ofxHeadlessFbo::setFromPixels(ofPixels newPixels, size_t w, size_t h, ofPix
     pixels = newPixels;
     this->w = w;
     this->h = h;
+    this->pixelFormat = pixelFormat;
+    this->numChannels = pixels.getNumChannels();
     markTextureDirty();
 }
 
@@ -192,25 +230,202 @@ void ofxHeadlessFbo::drawPoint(float x, float y) {
 }
 
 void ofxHeadlessFbo::writePoint(size_t x, size_t y) {
-    if (!isAllocated() || x < 0 || y < 0 || x >= w || y >= h)
+    if (!isAllocated() || x < 0 || y < 0 || x >= w || y >= h || numChannels == 0)
         return;
 
-    if (alphaBlending) {
-        ofColor cb = pixels.getColor(x, y);
-        ofColor ca = this->color;
-        float aa = ca.a / 255.0;
-        float ab = cb.a / 255.0;
-        float a0 = aa + ab * (1.0 - aa);
-        float r0 = (ca.r * aa + cb.r * ab * (1.0 - aa)) / a0;
-        float g0 = (ca.g * aa + cb.g * ab * (1.0 - aa)) / a0;
-        float b0 = (ca.b * aa + cb.b * ab * (1.0 - aa)) / a0;
-        ofColor c0(r0, g0, b0, a0 * 255);
-        pixels.setColor(x, y, c0);
-    } else {
-        pixels.setColor(x, y, this->color);
+    unsigned char *data = pixels.getData();
+    if (data == nullptr) {
+        return;
     }
 
-    markTextureDirty();
+    const size_t index = (y * w + x) * numChannels;
+    unsigned char *dst = data + index;
+
+    const unsigned char srcR = color.r;
+    const unsigned char srcG = color.g;
+    const unsigned char srcB = color.b;
+    const unsigned char srcA = color.a;
+
+    switch (pixelFormat) {
+        case OF_PIXELS_RGBA:
+            {
+                if (!alphaBlending) {
+                    dst[0] = srcR;
+                    dst[1] = srcG;
+                    dst[2] = srcB;
+                    dst[3] = srcA;
+                    textureDirty = true;
+                    return;
+                }
+
+                if (srcA == 0) {
+                    return;
+                }
+                if (srcA == 255) {
+                    dst[0] = srcR;
+                    dst[1] = srcG;
+                    dst[2] = srcB;
+                    dst[3] = 255;
+                    textureDirty = true;
+                    return;
+                }
+
+                const unsigned int invSrcAlpha = 255u - srcA;
+                const unsigned char dstA = dst[3];
+                const unsigned char outA =
+                    static_cast<unsigned char>(srcA + (static_cast<unsigned int>(dstA) * invSrcAlpha + 127u) / 255u);
+                dst[0] = blendOverChannel(srcR, dst[0], srcA, dstA, outA, invSrcAlpha);
+                dst[1] = blendOverChannel(srcG, dst[1], srcA, dstA, outA, invSrcAlpha);
+                dst[2] = blendOverChannel(srcB, dst[2], srcA, dstA, outA, invSrcAlpha);
+                dst[3] = outA;
+                textureDirty = true;
+                return;
+            }
+        case OF_PIXELS_BGRA:
+            {
+                if (!alphaBlending) {
+                    dst[0] = srcB;
+                    dst[1] = srcG;
+                    dst[2] = srcR;
+                    dst[3] = srcA;
+                    textureDirty = true;
+                    return;
+                }
+
+                if (srcA == 0) {
+                    return;
+                }
+                if (srcA == 255) {
+                    dst[0] = srcB;
+                    dst[1] = srcG;
+                    dst[2] = srcR;
+                    dst[3] = 255;
+                    textureDirty = true;
+                    return;
+                }
+
+                const unsigned int invSrcAlpha = 255u - srcA;
+                const unsigned char dstA = dst[3];
+                const unsigned char outA =
+                    static_cast<unsigned char>(srcA + (static_cast<unsigned int>(dstA) * invSrcAlpha + 127u) / 255u);
+                dst[0] = blendOverChannel(srcB, dst[0], srcA, dstA, outA, invSrcAlpha);
+                dst[1] = blendOverChannel(srcG, dst[1], srcA, dstA, outA, invSrcAlpha);
+                dst[2] = blendOverChannel(srcR, dst[2], srcA, dstA, outA, invSrcAlpha);
+                dst[3] = outA;
+                textureDirty = true;
+                return;
+            }
+        case OF_PIXELS_RGB:
+            {
+                if (!alphaBlending) {
+                    dst[0] = srcR;
+                    dst[1] = srcG;
+                    dst[2] = srcB;
+                    textureDirty = true;
+                    return;
+                }
+
+                if (srcA == 0) {
+                    return;
+                }
+                if (srcA == 255) {
+                    dst[0] = srcR;
+                    dst[1] = srcG;
+                    dst[2] = srcB;
+                    textureDirty = true;
+                    return;
+                }
+
+                dst[0] = blendOverOpaqueChannel(srcR, dst[0], srcA);
+                dst[1] = blendOverOpaqueChannel(srcG, dst[1], srcA);
+                dst[2] = blendOverOpaqueChannel(srcB, dst[2], srcA);
+                textureDirty = true;
+                return;
+            }
+        case OF_PIXELS_BGR:
+            {
+                if (!alphaBlending) {
+                    dst[0] = srcB;
+                    dst[1] = srcG;
+                    dst[2] = srcR;
+                    textureDirty = true;
+                    return;
+                }
+
+                if (srcA == 0) {
+                    return;
+                }
+                if (srcA == 255) {
+                    dst[0] = srcB;
+                    dst[1] = srcG;
+                    dst[2] = srcR;
+                    textureDirty = true;
+                    return;
+                }
+
+                dst[0] = blendOverOpaqueChannel(srcB, dst[0], srcA);
+                dst[1] = blendOverOpaqueChannel(srcG, dst[1], srcA);
+                dst[2] = blendOverOpaqueChannel(srcR, dst[2], srcA);
+                textureDirty = true;
+                return;
+            }
+        case OF_PIXELS_GRAY:
+            {
+                const unsigned char srcMono = monoFromRgb(srcR, srcG, srcB);
+                if (!alphaBlending) {
+                    dst[0] = srcMono;
+                    textureDirty = true;
+                    return;
+                }
+
+                if (srcA == 0) {
+                    return;
+                }
+                if (srcA == 255) {
+                    dst[0] = srcMono;
+                    textureDirty = true;
+                    return;
+                }
+
+                dst[0] = blendOverOpaqueChannel(srcMono, dst[0], srcA);
+                textureDirty = true;
+                return;
+            }
+        case OF_PIXELS_GRAY_ALPHA:
+            {
+                const unsigned char srcMono = monoFromRgb(srcR, srcG, srcB);
+                if (!alphaBlending) {
+                    dst[0] = srcMono;
+                    dst[1] = srcA;
+                    textureDirty = true;
+                    return;
+                }
+
+                if (srcA == 0) {
+                    return;
+                }
+                if (srcA == 255) {
+                    dst[0] = srcMono;
+                    dst[1] = 255;
+                    textureDirty = true;
+                    return;
+                }
+
+                const unsigned int invSrcAlpha = 255u - srcA;
+                const unsigned char dstA = dst[1];
+                const unsigned char outA =
+                    static_cast<unsigned char>(srcA + (static_cast<unsigned int>(dstA) * invSrcAlpha + 127u) / 255u);
+                dst[0] = blendOverChannel(srcMono, dst[0], srcA, dstA, outA, invSrcAlpha);
+                dst[1] = outA;
+                textureDirty = true;
+                return;
+            }
+        default:
+            break;
+    }
+
+    pixels.setColor(x, y, this->color);
+    textureDirty = true;
 }
 
 void ofxHeadlessFbo::markTextureDirty() {

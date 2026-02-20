@@ -192,6 +192,8 @@ class ofxHeadlessFbo {
     size_t h = 0;
     bool fill = true;
     bool alphaBlending = false;
+    ofPixelFormat pixelFormat = OF_PIXELS_UNKNOWN;
+    size_t numChannels = 0;
     bool textureDirty = true;
     size_t textureW = 0;
     size_t textureH = 0;
