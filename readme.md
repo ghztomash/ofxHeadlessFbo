@@ -4,12 +4,12 @@
 
 ## Introduction
 
-This is a simple addon implimenting the basic 2D drawing functions that don't
+This is a simple addon implementing the basic 2D drawing functions that don't
 utilize OpenGL. Inspired from the [Adafruit GFX Library](https://github.com/adafruit/Adafruit-GFX-Library).
 The shapes are drawn directly to an buffer of `ofPixels` instead of `ofTextures`.
 
 This addon is intended to be used in applications that run headless,
-for example a Rasberry Pi controlling LED strips without a monitor connected
+for example a Raspberry Pi controlling LED strips without a monitor connected
 (thus unable to run OpenGL).
 
 I hope you find this useful.

@@ -45,7 +45,7 @@ void ofApp::setup(){
 //--------------------------------------------------------------
 void ofApp::update(){
 
-    // draw in refference FBO
+    // draw in reference FBO
     t1 = std::chrono::high_resolution_clock::now(); // start benchmark timer
     fbo.begin();
 
