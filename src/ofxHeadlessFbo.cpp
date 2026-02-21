@@ -27,6 +27,7 @@ POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "ofxHeadlessFbo.h"
+#include <algorithm>
 #include <cmath>
 
 namespace {
@@ -230,8 +231,16 @@ void ofxHeadlessFbo::drawPoint(float x, float y) {
 }
 
 void ofxHeadlessFbo::writePoint(size_t x, size_t y) {
-    if (!isAllocated() || x < 0 || y < 0 || x >= w || y >= h || numChannels == 0)
+    if (!isAllocated() || x < 0 || y < 0 || x >= w || y >= h || numChannels == 0) {
         return;
+    }
+    writeSpanHFast(x, y, 1);
+}
+
+void ofxHeadlessFbo::writeSpanHFast(size_t x, size_t y, size_t span) {
+    if (span == 0 || numChannels == 0) {
+        return;
+    }
 
     unsigned char *data = pixels.getData();
     if (data == nullptr) {
@@ -250,10 +259,13 @@ void ofxHeadlessFbo::writePoint(size_t x, size_t y) {
         case OF_PIXELS_RGBA:
             {
                 if (!alphaBlending) {
-                    dst[0] = srcR;
-                    dst[1] = srcG;
-                    dst[2] = srcB;
-                    dst[3] = srcA;
+                    for (size_t i = 0; i < span; ++i) {
+                        dst[0] = srcR;
+                        dst[1] = srcG;
+                        dst[2] = srcB;
+                        dst[3] = srcA;
+                        dst += 4;
+                    }
                     textureDirty = true;
                     return;
                 }
@@ -262,32 +274,41 @@ void ofxHeadlessFbo::writePoint(size_t x, size_t y) {
                     return;
                 }
                 if (srcA == 255) {
-                    dst[0] = srcR;
-                    dst[1] = srcG;
-                    dst[2] = srcB;
-                    dst[3] = 255;
+                    for (size_t i = 0; i < span; ++i) {
+                        dst[0] = srcR;
+                        dst[1] = srcG;
+                        dst[2] = srcB;
+                        dst[3] = 255;
+                        dst += 4;
+                    }
                     textureDirty = true;
                     return;
                 }
 
                 const unsigned int invSrcAlpha = 255u - srcA;
-                const unsigned char dstA = dst[3];
-                const unsigned char outA =
-                    static_cast<unsigned char>(srcA + (static_cast<unsigned int>(dstA) * invSrcAlpha + 127u) / 255u);
-                dst[0] = blendOverChannel(srcR, dst[0], srcA, dstA, outA, invSrcAlpha);
-                dst[1] = blendOverChannel(srcG, dst[1], srcA, dstA, outA, invSrcAlpha);
-                dst[2] = blendOverChannel(srcB, dst[2], srcA, dstA, outA, invSrcAlpha);
-                dst[3] = outA;
+                for (size_t i = 0; i < span; ++i) {
+                    const unsigned char dstA = dst[3];
+                    const unsigned char outA = static_cast<unsigned char>(
+                        srcA + (static_cast<unsigned int>(dstA) * invSrcAlpha + 127u) / 255u);
+                    dst[0] = blendOverChannel(srcR, dst[0], srcA, dstA, outA, invSrcAlpha);
+                    dst[1] = blendOverChannel(srcG, dst[1], srcA, dstA, outA, invSrcAlpha);
+                    dst[2] = blendOverChannel(srcB, dst[2], srcA, dstA, outA, invSrcAlpha);
+                    dst[3] = outA;
+                    dst += 4;
+                }
                 textureDirty = true;
                 return;
             }
         case OF_PIXELS_BGRA:
             {
                 if (!alphaBlending) {
-                    dst[0] = srcB;
-                    dst[1] = srcG;
-                    dst[2] = srcR;
-                    dst[3] = srcA;
+                    for (size_t i = 0; i < span; ++i) {
+                        dst[0] = srcB;
+                        dst[1] = srcG;
+                        dst[2] = srcR;
+                        dst[3] = srcA;
+                        dst += 4;
+                    }
                     textureDirty = true;
                     return;
                 }
@@ -296,31 +317,40 @@ void ofxHeadlessFbo::writePoint(size_t x, size_t y) {
                     return;
                 }
                 if (srcA == 255) {
-                    dst[0] = srcB;
-                    dst[1] = srcG;
-                    dst[2] = srcR;
-                    dst[3] = 255;
+                    for (size_t i = 0; i < span; ++i) {
+                        dst[0] = srcB;
+                        dst[1] = srcG;
+                        dst[2] = srcR;
+                        dst[3] = 255;
+                        dst += 4;
+                    }
                     textureDirty = true;
                     return;
                 }
 
                 const unsigned int invSrcAlpha = 255u - srcA;
-                const unsigned char dstA = dst[3];
-                const unsigned char outA =
-                    static_cast<unsigned char>(srcA + (static_cast<unsigned int>(dstA) * invSrcAlpha + 127u) / 255u);
-                dst[0] = blendOverChannel(srcB, dst[0], srcA, dstA, outA, invSrcAlpha);
-                dst[1] = blendOverChannel(srcG, dst[1], srcA, dstA, outA, invSrcAlpha);
-                dst[2] = blendOverChannel(srcR, dst[2], srcA, dstA, outA, invSrcAlpha);
-                dst[3] = outA;
+                for (size_t i = 0; i < span; ++i) {
+                    const unsigned char dstA = dst[3];
+                    const unsigned char outA = static_cast<unsigned char>(
+                        srcA + (static_cast<unsigned int>(dstA) * invSrcAlpha + 127u) / 255u);
+                    dst[0] = blendOverChannel(srcB, dst[0], srcA, dstA, outA, invSrcAlpha);
+                    dst[1] = blendOverChannel(srcG, dst[1], srcA, dstA, outA, invSrcAlpha);
+                    dst[2] = blendOverChannel(srcR, dst[2], srcA, dstA, outA, invSrcAlpha);
+                    dst[3] = outA;
+                    dst += 4;
+                }
                 textureDirty = true;
                 return;
             }
         case OF_PIXELS_RGB:
             {
                 if (!alphaBlending) {
-                    dst[0] = srcR;
-                    dst[1] = srcG;
-                    dst[2] = srcB;
+                    for (size_t i = 0; i < span; ++i) {
+                        dst[0] = srcR;
+                        dst[1] = srcG;
+                        dst[2] = srcB;
+                        dst += 3;
+                    }
                     textureDirty = true;
                     return;
                 }
@@ -329,25 +359,34 @@ void ofxHeadlessFbo::writePoint(size_t x, size_t y) {
                     return;
                 }
                 if (srcA == 255) {
-                    dst[0] = srcR;
-                    dst[1] = srcG;
-                    dst[2] = srcB;
+                    for (size_t i = 0; i < span; ++i) {
+                        dst[0] = srcR;
+                        dst[1] = srcG;
+                        dst[2] = srcB;
+                        dst += 3;
+                    }
                     textureDirty = true;
                     return;
                 }
 
-                dst[0] = blendOverOpaqueChannel(srcR, dst[0], srcA);
-                dst[1] = blendOverOpaqueChannel(srcG, dst[1], srcA);
-                dst[2] = blendOverOpaqueChannel(srcB, dst[2], srcA);
+                for (size_t i = 0; i < span; ++i) {
+                    dst[0] = blendOverOpaqueChannel(srcR, dst[0], srcA);
+                    dst[1] = blendOverOpaqueChannel(srcG, dst[1], srcA);
+                    dst[2] = blendOverOpaqueChannel(srcB, dst[2], srcA);
+                    dst += 3;
+                }
                 textureDirty = true;
                 return;
             }
         case OF_PIXELS_BGR:
             {
                 if (!alphaBlending) {
-                    dst[0] = srcB;
-                    dst[1] = srcG;
-                    dst[2] = srcR;
+                    for (size_t i = 0; i < span; ++i) {
+                        dst[0] = srcB;
+                        dst[1] = srcG;
+                        dst[2] = srcR;
+                        dst += 3;
+                    }
                     textureDirty = true;
                     return;
                 }
@@ -356,16 +395,22 @@ void ofxHeadlessFbo::writePoint(size_t x, size_t y) {
                     return;
                 }
                 if (srcA == 255) {
-                    dst[0] = srcB;
-                    dst[1] = srcG;
-                    dst[2] = srcR;
+                    for (size_t i = 0; i < span; ++i) {
+                        dst[0] = srcB;
+                        dst[1] = srcG;
+                        dst[2] = srcR;
+                        dst += 3;
+                    }
                     textureDirty = true;
                     return;
                 }
 
-                dst[0] = blendOverOpaqueChannel(srcB, dst[0], srcA);
-                dst[1] = blendOverOpaqueChannel(srcG, dst[1], srcA);
-                dst[2] = blendOverOpaqueChannel(srcR, dst[2], srcA);
+                for (size_t i = 0; i < span; ++i) {
+                    dst[0] = blendOverOpaqueChannel(srcB, dst[0], srcA);
+                    dst[1] = blendOverOpaqueChannel(srcG, dst[1], srcA);
+                    dst[2] = blendOverOpaqueChannel(srcR, dst[2], srcA);
+                    dst += 3;
+                }
                 textureDirty = true;
                 return;
             }
@@ -373,7 +418,7 @@ void ofxHeadlessFbo::writePoint(size_t x, size_t y) {
             {
                 const unsigned char srcMono = monoFromRgb(srcR, srcG, srcB);
                 if (!alphaBlending) {
-                    dst[0] = srcMono;
+                    std::fill_n(dst, span, srcMono);
                     textureDirty = true;
                     return;
                 }
@@ -382,12 +427,14 @@ void ofxHeadlessFbo::writePoint(size_t x, size_t y) {
                     return;
                 }
                 if (srcA == 255) {
-                    dst[0] = srcMono;
+                    std::fill_n(dst, span, srcMono);
                     textureDirty = true;
                     return;
                 }
 
-                dst[0] = blendOverOpaqueChannel(srcMono, dst[0], srcA);
+                for (size_t i = 0; i < span; ++i) {
+                    dst[i] = blendOverOpaqueChannel(srcMono, dst[i], srcA);
+                }
                 textureDirty = true;
                 return;
             }
@@ -395,8 +442,11 @@ void ofxHeadlessFbo::writePoint(size_t x, size_t y) {
             {
                 const unsigned char srcMono = monoFromRgb(srcR, srcG, srcB);
                 if (!alphaBlending) {
-                    dst[0] = srcMono;
-                    dst[1] = srcA;
+                    for (size_t i = 0; i < span; ++i) {
+                        dst[0] = srcMono;
+                        dst[1] = srcA;
+                        dst += 2;
+                    }
                     textureDirty = true;
                     return;
                 }
@@ -405,18 +455,24 @@ void ofxHeadlessFbo::writePoint(size_t x, size_t y) {
                     return;
                 }
                 if (srcA == 255) {
-                    dst[0] = srcMono;
-                    dst[1] = 255;
+                    for (size_t i = 0; i < span; ++i) {
+                        dst[0] = srcMono;
+                        dst[1] = 255;
+                        dst += 2;
+                    }
                     textureDirty = true;
                     return;
                 }
 
                 const unsigned int invSrcAlpha = 255u - srcA;
-                const unsigned char dstA = dst[1];
-                const unsigned char outA =
-                    static_cast<unsigned char>(srcA + (static_cast<unsigned int>(dstA) * invSrcAlpha + 127u) / 255u);
-                dst[0] = blendOverChannel(srcMono, dst[0], srcA, dstA, outA, invSrcAlpha);
-                dst[1] = outA;
+                for (size_t i = 0; i < span; ++i) {
+                    const unsigned char dstA = dst[1];
+                    const unsigned char outA = static_cast<unsigned char>(
+                        srcA + (static_cast<unsigned int>(dstA) * invSrcAlpha + 127u) / 255u);
+                    dst[0] = blendOverChannel(srcMono, dst[0], srcA, dstA, outA, invSrcAlpha);
+                    dst[1] = outA;
+                    dst += 2;
+                }
                 textureDirty = true;
                 return;
             }
@@ -424,7 +480,9 @@ void ofxHeadlessFbo::writePoint(size_t x, size_t y) {
             break;
     }
 
-    pixels.setColor(x, y, this->color);
+    for (size_t i = 0; i < span; ++i) {
+        pixels.setColor(x + i, y, this->color);
+    }
     textureDirty = true;
 }
 
@@ -454,12 +512,12 @@ void ofxHeadlessFbo::drawLine(float x1, float y1, float x2, float y2) {
         if (iy1 > iy2) {
             std::swap(iy1, iy2);
         }
-        writeLineV(static_cast<size_t>(ix1), static_cast<size_t>(iy1), static_cast<size_t>(iy2 - iy1 + 1));
+        writeLineV(ix1, iy1, iy2 - iy1 + 1);
     } else if (iy1 == iy2) { // horizontal line
         if (ix1 > ix2) {
             std::swap(ix1, ix2);
         }
-        writeLineH(static_cast<size_t>(ix1), static_cast<size_t>(iy1), static_cast<size_t>(ix2 - ix1 + 1));
+        writeLineH(ix1, iy1, ix2 - ix1 + 1);
     } else { // diagonal line
         writeLine(static_cast<size_t>(ix1), static_cast<size_t>(iy1), static_cast<size_t>(ix2), static_cast<size_t>(iy2));
     }
@@ -504,22 +562,68 @@ void ofxHeadlessFbo::writeLine(size_t x1, size_t y1, size_t x2, size_t y2) {
     }
 }
 
-void ofxHeadlessFbo::writeLineH(size_t x, size_t y, size_t w) {
-    for (size_t i = 0; i < w; i++) {
-        writePoint(x + i, y);
+void ofxHeadlessFbo::writeLineH(int x, int y, int span) {
+    if (!isAllocated() || span <= 0) {
+        return;
     }
+    if (y < 0 || y >= static_cast<int>(h)) {
+        return;
+    }
+
+    long long start = static_cast<long long>(x);
+    long long end = start + static_cast<long long>(span) - 1;
+    if (end < 0 || start >= static_cast<long long>(w)) {
+        return;
+    }
+
+    if (start < 0) {
+        start = 0;
+    }
+    const long long maxX = static_cast<long long>(w) - 1;
+    if (end > maxX) {
+        end = maxX;
+    }
+
+    writeSpanHFast(static_cast<size_t>(start), static_cast<size_t>(y),
+                   static_cast<size_t>(end - start + 1));
 }
 
-void ofxHeadlessFbo::writeLineV(size_t x, size_t y, size_t h) {
-    for (size_t i = 0; i < h; i++) {
-        writePoint(x, y + i);
+void ofxHeadlessFbo::writeLineV(int x, int y, int span) {
+    if (!isAllocated() || span <= 0) {
+        return;
+    }
+    if (x < 0 || x >= static_cast<int>(w)) {
+        return;
+    }
+
+    long long start = static_cast<long long>(y);
+    long long end = start + static_cast<long long>(span) - 1;
+    if (end < 0 || start >= static_cast<long long>(h)) {
+        return;
+    }
+
+    if (start < 0) {
+        start = 0;
+    }
+    const long long maxY = static_cast<long long>(h) - 1;
+    if (end > maxY) {
+        end = maxY;
+    }
+
+    const size_t sx = static_cast<size_t>(x);
+    for (long long row = start; row <= end; ++row) {
+        writeSpanHFast(sx, static_cast<size_t>(row), 1);
     }
 }
 
 void ofxHeadlessFbo::drawRectangle(float x, float y, float w, float h) {
     if (fill) {
-        for (int i = x; i < x + w; i++) {
-            writeLineV(i, y, h);
+        const int ix = static_cast<int>(x);
+        const int iy = static_cast<int>(y);
+        const int iw = static_cast<int>(w);
+        const int ih = static_cast<int>(h);
+        for (int row = 0; row < ih; ++row) {
+            writeLineH(ix, iy + row, iw);
         }
     } else {
         writeLineH(x, y, w);

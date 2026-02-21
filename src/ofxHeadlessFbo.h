@@ -182,8 +182,9 @@ class ofxHeadlessFbo {
     private:
     void writePoint(size_t x, size_t y);
     void writeLine(size_t x1, size_t y1, size_t x2, size_t y2);
-    void writeLineH(size_t x, size_t y, size_t w);
-    void writeLineV(size_t x, size_t y, size_t h);
+    void writeLineH(int x, int y, int span);
+    void writeLineV(int x, int y, int span);
+    void writeSpanHFast(size_t x, size_t y, size_t span);
     void circleHelper(int x0, int y0, int r, int corners);
     void fillCircleHelper(int x0, int y0, int r, int corners, int delta);
     void markTextureDirty();
