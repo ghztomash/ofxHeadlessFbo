@@ -181,7 +181,7 @@ class ofxHeadlessFbo {
 
     private:
     void writePoint(size_t x, size_t y);
-    void writeLine(size_t x1, size_t y1, size_t x2, size_t y2);
+    void writeLine(int x1, int y1, int x2, int y2);
     void writeLineH(int x, int y, int span);
     void writeLineV(int x, int y, int span);
     void writeSpanHFast(size_t x, size_t y, size_t span);

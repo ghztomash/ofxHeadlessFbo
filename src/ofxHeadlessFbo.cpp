@@ -519,12 +519,12 @@ void ofxHeadlessFbo::drawLine(float x1, float y1, float x2, float y2) {
         }
         writeLineH(ix1, iy1, ix2 - ix1 + 1);
     } else { // diagonal line
-        writeLine(static_cast<size_t>(ix1), static_cast<size_t>(iy1), static_cast<size_t>(ix2), static_cast<size_t>(iy2));
+        writeLine(ix1, iy1, ix2, iy2);
     }
 }
 
-void ofxHeadlessFbo::writeLine(size_t x1, size_t y1, size_t x2, size_t y2) {
-    bool steep = abs((int)(y2 - y1)) > abs((int)(x2 - x1));
+void ofxHeadlessFbo::writeLine(int x1, int y1, int x2, int y2) {
+    const bool steep = std::abs(y2 - y1) > std::abs(x2 - x1);
     if (steep) {
         std::swap(x1, y1);
         std::swap(x2, y2);
@@ -535,28 +535,22 @@ void ofxHeadlessFbo::writeLine(size_t x1, size_t y1, size_t x2, size_t y2) {
         std::swap(y1, y2);
     }
 
-    int dx, dy;
-    dx = x2 - x1;
-    dy = abs((int)(y2 - y1));
-
+    const int dx = x2 - x1;
+    const int dy = std::abs(y2 - y1);
     int err = dx / 2;
-    int ystep;
+    const int ystep = (y1 < y2) ? 1 : -1;
 
-    if (y1 < y2) {
-        ystep = 1;
-    } else {
-        ystep = -1;
-    }
-
-    for (; x1 <= x2; x1++) {
+    int y = y1;
+    for (int x = x1; x <= x2; ++x) {
         if (steep) {
-            writePoint(y1, x1);
+            writePoint(static_cast<size_t>(y), static_cast<size_t>(x));
         } else {
-            writePoint(x1, y1);
+            writePoint(static_cast<size_t>(x), static_cast<size_t>(y));
         }
+
         err -= dy;
         if (err < 0) {
-            y1 += ystep;
+            y += ystep;
             err += dx;
         }
     }
@@ -617,19 +611,34 @@ void ofxHeadlessFbo::writeLineV(int x, int y, int span) {
 }
 
 void ofxHeadlessFbo::drawRectangle(float x, float y, float w, float h) {
+    if (w < 0) {
+        x += w;
+        w = -w;
+    }
+    if (h < 0) {
+        y += h;
+        h = -h;
+    }
+
+    const int x0 = static_cast<int>(std::floor(x));
+    const int y0 = static_cast<int>(std::floor(y));
+    const int x1 = static_cast<int>(std::ceil(x + w));
+    const int y1 = static_cast<int>(std::ceil(y + h));
+    const int spanW = x1 - x0;
+    const int spanH = y1 - y0;
+    if (spanW <= 0 || spanH <= 0) {
+        return;
+    }
+
     if (fill) {
-        const int ix = static_cast<int>(x);
-        const int iy = static_cast<int>(y);
-        const int iw = static_cast<int>(w);
-        const int ih = static_cast<int>(h);
-        for (int row = 0; row < ih; ++row) {
-            writeLineH(ix, iy + row, iw);
+        for (int row = y0; row < y1; ++row) {
+            writeLineH(x0, row, spanW);
         }
     } else {
-        writeLineH(x, y, w);
-        writeLineH(x, y + h - 1, w);
-        writeLineV(x, y, h);
-        writeLineV(x + w - 1, y, h);
+        writeLineH(x0, y0, spanW);
+        writeLineH(x0, y1 - 1, spanW);
+        writeLineV(x0, y0, spanH);
+        writeLineV(x1 - 1, y0, spanH);
     }
 }
 
