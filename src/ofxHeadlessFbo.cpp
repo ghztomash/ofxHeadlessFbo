@@ -652,82 +652,87 @@ void ofxHeadlessFbo::drawSquareCentered(float x, float y, float d) {
 
 void ofxHeadlessFbo::drawTriangle(float x1, float y1, float x2, float y2, float x3, float y3) {
     if (fill) {
-        int a, b, y, last;
-        int _x1 = x1, _y1 = y1, _x2 = x2, _y2 = y2, _x3 = x3, _y3 = y3;
-
-        // Sort coordinates by Y order (y3 >= y2 >= y1)
-        if (_y1 > _y2) {
-            std::swap(_y1, _y2);
-            std::swap(_x1, _x2);
-        }
-        if (_y2 > _y3) {
-            std::swap(_y3, _y2);
-            std::swap(_x3, _x2);
-        }
-        if (_y1 > _y2) {
-            std::swap(_y1, _y2);
-            std::swap(_x1, _x2);
-        }
-
-        if (_y1 == _y3) { // Handle awkward all-on-same-line case as its own thing
-            a = b = _x1;
-            if (_x2 < a)
-                a = _x2;
-            else if (_x2 > b)
-                b = _x2;
-            if (_x3 < a)
-                a = _x3;
-            else if (_x3 > b)
-                b = _x3;
-            writeLineH(a, _y1, b - a + 1);
+        if (!isAllocated() || w == 0 || h == 0) {
             return;
         }
 
-        int dx12 = _x2 - _x1, dy12 = _y2 - _y1, dx13 = _x3 - _x1, dy13 = _y3 - _y1,
-            dx23 = _x3 - _x2, dy23 = _y3 - _y2;
-        long sa = 0, sb = 0;
+        const float area2 = (x2 - x1) * (y3 - y1) - (y2 - y1) * (x3 - x1);
+        if (std::abs(area2) <= 1e-6f) {
+            auto dist2 = [](float ax, float ay, float bx, float by) {
+                const float dx = bx - ax;
+                const float dy = by - ay;
+                return dx * dx + dy * dy;
+            };
 
-        // For upper part of triangle, find scanline crossings for segments
-        // 0-1 and 0-2.  If y2=y3 (flat-bottomed triangle), the scanline y2
-        // is included here (and second loop will be skipped, avoiding a /0
-        // error there), otherwise scanline y2 is skipped here and handled
-        // in the second loop...which also avoids a /0 error here if y1=y2
-        // (flat-topped triangle).
-        if (_y2 == _y3)
-            last = _y2; // Include y2 scanline
-        else
-            last = _y2 - 1; // Skip it
-
-        for (y = _y1; y <= last; y++) {
-            a = _x1 + sa / dy12;
-            b = _x1 + sb / dy13;
-            sa += dx12;
-            sb += dx13;
-            /* longhand:
-            a = x1 + (x2 - x1) * (y - y1) / (y2 - y1);
-            b = x1 + (x3 - x1) * (y - y1) / (y3 - y1);
-            */
-            if (a > b)
-                std::swap(a, b);
-            writeLineH(a, y, b - a + 1);
+            const float d12 = dist2(x1, y1, x2, y2);
+            const float d23 = dist2(x2, y2, x3, y3);
+            const float d31 = dist2(x3, y3, x1, y1);
+            if (d12 >= d23 && d12 >= d31) {
+                drawLine(x1, y1, x2, y2);
+            } else if (d23 >= d31) {
+                drawLine(x2, y2, x3, y3);
+            } else {
+                drawLine(x3, y3, x1, y1);
+            }
+            return;
         }
 
-        // For lower part of triangle, find scanline crossings for segments
-        // 1-3 and 2-3.  This loop is skipped if y2=y3.
-        sa = (long)dx23 * (y - _y2);
-        sb = (long)dx13 * (y - _y1);
-        for (; y <= _y3; y++) {
-            a = _x2 + sa / dy23;
-            b = _x1 + sb / dy13;
-            sa += dx23;
-            sb += dx13;
-            /* longhand:
-            a = x2 + (x3 - x2) * (y - y2) / (y3 - y2);
-            b = x1 + (x3 - x1) * (y - y1) / (y3 - y1);
-            */
-            if (a > b)
-                std::swap(a, b);
-            writeLineH(a, y, b - a + 1);
+        const float minY = std::min({y1, y2, y3});
+        const float maxY = std::max({y1, y2, y3});
+        int yStart = static_cast<int>(std::floor(minY));
+        int yEnd = static_cast<int>(std::ceil(maxY));
+
+        if (yEnd <= 0 || yStart >= static_cast<int>(h)) {
+            return;
+        }
+        yStart = std::max(yStart, 0);
+        yEnd = std::min(yEnd, static_cast<int>(h));
+        if (yStart >= yEnd) {
+            return;
+        }
+
+        auto addIntersection = [](float ax, float ay, float bx, float by, float scanY, float *hits,
+                                  int &hitCount) {
+            if (ay == by) {
+                return;
+            }
+            const float edgeMinY = std::min(ay, by);
+            const float edgeMaxY = std::max(ay, by);
+            if (scanY < edgeMinY || scanY >= edgeMaxY) {
+                return;
+            }
+
+            const float t = (scanY - ay) / (by - ay);
+            hits[hitCount++] = ax + t * (bx - ax);
+        };
+
+        for (int row = yStart; row < yEnd; ++row) {
+            const float scanY = static_cast<float>(row) + 0.5f;
+            float hits[3];
+            int hitCount = 0;
+
+            addIntersection(x1, y1, x2, y2, scanY, hits, hitCount);
+            addIntersection(x2, y2, x3, y3, scanY, hits, hitCount);
+            addIntersection(x3, y3, x1, y1, scanY, hits, hitCount);
+
+            if (hitCount < 2) {
+                continue;
+            }
+
+            float left = hits[0];
+            float right = hits[0];
+            for (int i = 1; i < hitCount; ++i) {
+                left = std::min(left, hits[i]);
+                right = std::max(right, hits[i]);
+            }
+
+            int xStart = static_cast<int>(std::floor(left));
+            int xEnd = static_cast<int>(std::floor(right));
+            if (xEnd < xStart) {
+                std::swap(xStart, xEnd);
+            }
+
+            writeLineH(xStart, row, xEnd - xStart + 1);
         }
     } else {
         drawLine(x1, y1, x2, y2);
